@@ -1,4 +1,6 @@
-const app = require("./app").app,
+const appModule = require("./app"), // UPDATED: Get both app and mongoose
+  app = appModule.app,
+  mongoose = appModule.mongoose,
   crypto = require("crypto"),
   express = require("express"),
   path = require("path"),
@@ -8,6 +10,7 @@ const app = require("./app").app,
   session = require("express-session"),
   cookieParser = require("cookie-parser");
 
+// UPDATED: Use the existing mongoose connection for sessions
 const MongoStore = require("connect-mongo")(session),
   sessionSecret =
     process.env.STEIN_SESSION_SECRET || crypto.randomBytes(6).toString("hex");
@@ -16,14 +19,17 @@ let sessionOptions = {
   secret: sessionSecret,
   saveUninitialized: false,
   resave: false,
-  store: new MongoStore({ url: process.env.STEIN_MONGO_URL }),
+  // FIX: Use existing connection instead of creating a new one with 'url'
+  store: new MongoStore({ mongooseConnection: mongoose.connection }),
   cookie: { expires: false }
 };
 
 // set the view engine to ejs
 app.set("view engine", "ejs");
-app.set("trust proxy", 1); // Trust Render's proxy
 app.set("views", path.join(__dirname, "/views"));
+
+// FIX: Trust Render's Load Balancer so cookies work
+app.set("trust proxy", 1);
 
 app.use(cookieParser(sessionSecret));
 app.use(session(sessionOptions));

@@ -22,6 +22,7 @@ let sessionOptions = {
 
 // set the view engine to ejs
 app.set("view engine", "ejs");
+app.set("trust proxy", 1); // Trust Render's proxy
 app.set("views", path.join(__dirname, "/views"));
 
 app.use(cookieParser(sessionSecret));
